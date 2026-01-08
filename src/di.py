@@ -1,28 +1,48 @@
-from typing import Dict, Type
-from ..config import settings
-from .sources.base import Fetcher
+from dependency_injector import containers, providers
+from sqlalchemy.ext.asyncio import create_async_engine
+
+from .config import Settings, settings
+from .database import AsyncSessionLocal
 from .sources.hn_fetcher import HNFetcher
 from .sources.twitter_fetcher import TwitterFetcher
 from .sources.rss_fetcher import RSSFetcher
+from .agents.research_agent import research_agent
+from .agents.opinion_agent import opinion_agent
+from .agents.tweet_agent import tweet_agent
+from .agents.posting_agent import PostingAgent
+from .services.scraper import ScraperService
+from .services.scheduler import SchedulerService
 
 
-class SourceRegistry:
-    def __init__(self):
-        self._registry: Dict[str, Type[Fetcher]] = {}
+class Container(containers.DeclarativeContainer):
+    # Config
+    config = providers.Singleton(Settings)
 
-    def register(self, name: str, fetcher_class: Type[Fetcher]):
-        self._registry[name] = fetcher_class
+    # Database
+    db_engine = providers.Singleton(
+        create_async_engine, url=config.provided.database_url, echo=True
+    )
+    db_session = providers.Singleton(AsyncSessionLocal)
 
-    def get_fetcher(self, name: str) -> Fetcher:
-        if name == "hn":
-            return HNFetcher()
-        elif name == "twitter":
-            return TwitterFetcher()
-        elif name == "rss":
-            urls = settings.rss_feeds.split(",") if settings.rss_feeds else []
-            return RSSFetcher(urls)
-        else:
-            raise ValueError(f"Unknown fetcher: {name}")
+    # Fetchers
+    hn_fetcher = providers.Singleton(HNFetcher)
+    twitter_fetcher = providers.Singleton(TwitterFetcher)
+    rss_fetcher = providers.Factory(
+        RSSFetcher,
+        urls=providers.Callable(
+            lambda rss_feeds: rss_feeds.split(",") if rss_feeds else [], config.provided.rss_feeds
+        ),
+    )
+
+    # Agents
+    research_agent_provider = providers.Object(research_agent)
+    opinion_agent_provider = providers.Object(opinion_agent)
+    tweet_agent_provider = providers.Object(tweet_agent)
+    posting_agent = providers.Singleton(PostingAgent)
+
+    # Services
+    scraper_service = providers.Singleton(ScraperService)
+    scheduler_service = providers.Singleton(SchedulerService)
 
 
-registry = SourceRegistry()
+container = Container()
