@@ -9,7 +9,7 @@ from .sources.rss_fetcher import RSSFetcher
 from .agents.research_agent import research_agent
 from .agents.opinion_agent import opinion_agent
 from .agents.tweet_agent import tweet_agent
-from .agents.posting_agent import PostingAgent
+
 from .services.scraper import ScraperService
 from .services.scheduler import SchedulerService
 
@@ -38,7 +38,6 @@ class Container(containers.DeclarativeContainer):
     research_agent_provider = providers.Object(research_agent)
     opinion_agent_provider = providers.Object(opinion_agent)
     tweet_agent_provider = providers.Object(tweet_agent)
-    posting_agent = providers.Singleton(PostingAgent)
 
     # Services
     scraper_service = providers.Singleton(ScraperService)

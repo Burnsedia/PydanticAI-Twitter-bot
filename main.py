@@ -39,8 +39,9 @@ async def run_bot_cycle():
                 tweet_thread = await generate_thread(topic, opinion)
 
                 # Post thread
-                posting_agent = container.posting_agent()
-                posted_ids = await posting_agent.post_thread(tweet_thread.tweets)
+                from src.agents.posting_agent import post_thread_via_agent
+
+                posted_ids = await post_thread_via_agent(tweet_thread.tweets)
                 logger.info(f"Posted thread with IDs: {posted_ids}")
     except Exception as e:
         logger.error(f"Error in bot cycle: {e}")
