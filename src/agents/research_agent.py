@@ -19,7 +19,6 @@ class HotTopic(BaseModel):
 research_agent = Agent(
     "openai:gpt-4o-mini",
     system_prompt=f"You are a research assistant for viral Twitter content. Analyze provided HN stories, Twitter trends, and RSS feeds. Identify topics with high engagement potential (points >= {settings.viral_points_threshold}, volume >= {settings.viral_volume_threshold}). Score based on points, volume, and keyword overlap. Return top 5 hot topics.",
-    result_type=List[HotTopic],
 )
 
 
@@ -57,6 +56,6 @@ async def run_research() -> List[HotTopic]:
     data_summary += f"RSS: {', '.join([item.title for item in rss_data])}"
 
     result = await research_agent.run(
-        f"Analyze this data and identify viral topics:\n{data_summary}"
+        f"Analyze this data and identify viral topics:\n{data_summary}", result_type=List[HotTopic]
     )
     return result.data

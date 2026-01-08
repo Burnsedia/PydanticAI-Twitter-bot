@@ -15,7 +15,7 @@ class Opinion(BaseModel):
 with open("system_prompt.md", "r") as f:
     system_prompt = f.read()
 
-opinion_agent = Agent("openai:gpt-4o-mini", system_prompt=system_prompt, result_type=List[Opinion])
+opinion_agent = Agent("openai:gpt-4o-mini", system_prompt=system_prompt)
 
 
 async def generate_opinions(topics: List[str]) -> List[Opinion]:
