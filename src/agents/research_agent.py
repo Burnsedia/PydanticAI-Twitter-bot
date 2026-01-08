@@ -1,6 +1,6 @@
 from typing import List
 from pydantic import BaseModel
-import pydantic_ai
+from pydantic_ai import Agent, tool
 
 from ..config import settings
 from ..di import registry
@@ -17,56 +17,53 @@ class HotTopic(BaseModel):
     virality_score: float
 
 
-class ResearchAgent:
-    def __init__(self):
-        self.agent = pydantic_ai.Agent(
-            "openai:gpt-4o-mini",
-            system_prompt="You are a research assistant for viral Twitter content. Analyze HN stories, Twitter trends, and RSS feeds to identify topics with high engagement potential (10k+ likes/retweets). Score based on points, volume, and relevance.",
-            result_type=List[HotTopic],
-        )
+@tool
+async def fetch_hn() -> str:
+    """Fetch Hacker News stories."""
+    hn_fetcher = registry.get_fetcher("hn")
+    hn_data = await hn_fetcher.fetch()
+    async for session in get_db():
+        for item in hn_data:
+            db_item = HNItem.from_pydantic(item)
+            session.add(db_item)
+        await session.commit()
+    return f"HN Stories: {', '.join([f'{item.title} ({item.points} pts)' for item in hn_data])}"
 
-    async def run_research(self) -> List[HotTopic]:
-        # Fetch data
-        hn_fetcher = registry.get_fetcher("hn")
-        twitter_fetcher = registry.get_fetcher("twitter")
-        rss_fetcher = registry.get_fetcher("rss")
 
-        hn_data = await hn_fetcher.fetch()
-        twitter_data = await twitter_fetcher.fetch()
-        rss_data = await rss_fetcher.fetch()
+@tool
+async def fetch_trends() -> str:
+    """Fetch Twitter trends."""
+    twitter_fetcher = registry.get_fetcher("twitter")
+    twitter_data = await twitter_fetcher.fetch()
+    async for session in get_db():
+        for item in twitter_data:
+            db_item = Trend.from_pydantic(item)
+            session.add(db_item)
+        await session.commit()
+    return f"Twitter Trends: {', '.join([f'{item.name} ({item.tweet_volume or 0} vol)' for item in twitter_data])}"
 
-        # Save to DB
-        async for session in get_db():
-            for item in hn_data:
-                db_item = HNItem.from_pydantic(item)
-                session.add(db_item)
-            for item in twitter_data:
-                db_item = Trend.from_pydantic(item)
-                session.add(db_item)
-            for item in rss_data:
-                db_item = RSSItem.from_pydantic(item)
-                session.add(db_item)
-            await session.commit()
 
-        # Analyze for viral topics
-        hot_topics = []
-        for hn in hn_data:
-            if hn.points >= settings.viral_points_threshold:
-                score = hn.points / 100  # Simple score
-                for trend in twitter_data:
-                    if trend.tweet_volume and trend.tweet_volume >= settings.viral_volume_threshold:
-                        # Check keyword overlap (simple)
-                        if any(word.lower() in hn.title.lower() for word in trend.name.split()):
-                            score += trend.tweet_volume / 10000
-                hot_topics.append(
-                    HotTopic(
-                        title=hn.title,
-                        source="HN",
-                        url=hn.url or f"https://news.ycombinator.com/item?id={hn.id}",
-                        virality_score=min(score, 10),  # Cap at 10
-                    )
-                )
+@tool
+async def fetch_rss() -> str:
+    """Fetch RSS feeds."""
+    rss_fetcher = registry.get_fetcher("rss")
+    rss_data = await rss_fetcher.fetch()
+    async for session in get_db():
+        for item in rss_data:
+            db_item = RSSItem.from_pydantic(item)
+            session.add(db_item)
+        await session.commit()
+    return f"RSS Items: {', '.join([item.title for item in rss_data])}"
 
-        # Sort by score
-        hot_topics.sort(key=lambda x: x.virality_score, reverse=True)
-        return hot_topics[:5]  # Top 5
+
+research_agent = Agent(
+    "openai:gpt-4o-mini",
+    system_prompt=f"You are a research assistant for viral Twitter content. Use tools to fetch data from HN, Twitter, and RSS. Identify topics with high engagement potential (HN points >= {settings.viral_points_threshold}, Twitter volume >= {settings.viral_volume_threshold}). Score based on points, volume, and keyword overlap. Return top 5 hot topics.",
+    result_type=List[HotTopic],
+    tools=[fetch_hn, fetch_trends, fetch_rss],
+)
+
+
+async def run_research() -> List[HotTopic]:
+    result = await research_agent.run("Fetch all data and identify viral topics.")
+    return result.data

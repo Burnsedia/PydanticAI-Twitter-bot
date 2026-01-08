@@ -1,4 +1,4 @@
-from .research_agent import ResearchAgent
-from .opinion_agent import OpinionAgent
-from .tweet_agent import TweetAgent
+from .research_agent import run_research
+from .opinion_agent import generate_opinions
+from .tweet_agent import generate_thread
 from .posting_agent import PostingAgent
