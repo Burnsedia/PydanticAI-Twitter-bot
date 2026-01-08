@@ -1,0 +1,53 @@
+Metadata-Version: 2.4
+Name: pydanticai-twitter-bot
+Version: 0.1.0
+Summary: PydanticAI Twitter bot that researches HN and Twitter trends to generate viral tweets
+Requires-Python: >=3.13
+Description-Content-Type: text/markdown
+Requires-Dist: pydantic>=2.12.5
+Requires-Dist: pydantic-ai>=1.40.0
+Requires-Dist: pydantic-settings>=2.0.0
+Requires-Dist: tweepy>=4.16.0
+Requires-Dist: sqlalchemy>=2.0.0
+Requires-Dist: alembic>=1.12.0
+Requires-Dist: dependency-injector>=4.40.0
+Requires-Dist: feedparser>=6.0.0
+Requires-Dist: beautifulsoup4>=4.12.0
+Requires-Dist: requests>=2.31.0
+Requires-Dist: schedule>=1.2.0
+Provides-Extra: dev
+Requires-Dist: pytest>=7.0.0; extra == "dev"
+Requires-Dist: pytest-asyncio>=0.21.0; extra == "dev"
+Requires-Dist: responses>=0.24.0; extra == "dev"
+
+# PydanticAI Twitter Bot
+
+An autonomous Twitter bot that researches Hacker News and Twitter trends to generate viral tweets (targeting 10k+ engagements) in a specific style, using PydanticAI agents.
+
+## Features
+
+- **Research Agent**: Fetches HN top stories and Twitter trends, identifies viral topics.
+- **Opinion Agent**: Derives opinions from your blog and GitHub projects.
+- **Tweet Agent**: Generates engaging tweets or threads.
+- **Posting Agent**: Posts to Twitter with thread support.
+- **Extensible Sources**: Dependency injection for HN, Twitter, RSS feeds.
+- **Data Persistence**: SQLAlchemy with Pydantic models.
+
+## Setup
+
+1. Clone and install: `pip install -e .[dev]`
+2. Copy `.env.example` to `.env` and fill in credentials.
+3. Run migrations: `alembic upgrade head`
+4. Run the bot: `python -m src.main`
+
+## Development
+
+- Build components in `src/`: Start with models, then sources, agents.
+- Test with pytest.
+- Add new sources via DI in `src/di.py`.
+
+## Architecture
+
+See `src/` for modular code: models, sources, agents, services.
+
+For details, see the project plan.
