@@ -6,7 +6,7 @@ from ..models.hn import HNItemPydantic
 from .base import Fetcher
 
 
-class HNFetcher(Fetcher[HNItemPydantic]):
+class HNFetcher(Fetcher):
     def __init__(self, top_limit: int = 30):
         self.top_limit = top_limit
 

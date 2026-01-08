@@ -6,7 +6,7 @@ from ..models.trend import TrendPydantic
 from .base import Fetcher
 
 
-class TwitterFetcher(Fetcher[TrendPydantic]):
+class TwitterFetcher(Fetcher):
     def __init__(self, woeid: int = 1):  # 1 = Worldwide
         self.woeid = woeid
         self.client = tweepy.Client(

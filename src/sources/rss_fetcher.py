@@ -5,7 +5,7 @@ from ..models.rss import RSSItemPydantic
 from .base import Fetcher
 
 
-class RSSFetcher(Fetcher[RSSItemPydantic]):
+class RSSFetcher(Fetcher):
     def __init__(self, urls: List[str]):
         self.urls = urls
 
