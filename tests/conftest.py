@@ -1,5 +1,6 @@
 import os
 import pytest
+from unittest.mock import AsyncMock
 
 
 @pytest.fixture(autouse=True)
@@ -21,3 +22,15 @@ def set_test_env():
     os.environ.setdefault("VIRAL_VOLUME_THRESHOLD", "10000")
     os.environ.setdefault("RSS_FEEDS", "https://example.com/feed")
     yield
+
+
+@pytest.fixture
+def mock_db_session():
+    return AsyncMock()  # Mock async session
+
+
+@pytest.fixture
+def mock_agent():
+    agent = AsyncMock()
+    agent.run.return_value = AsyncMock(data="mock_result")
+    return agent
