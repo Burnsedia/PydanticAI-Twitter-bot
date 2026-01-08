@@ -6,6 +6,7 @@ class Base(DeclarativeBase):
 
 
 from .hn import HNItem
+from .rss import RSSItem
 from .trend import Trend
 from .tweet import Tweet
 from .user_content import UserContent
