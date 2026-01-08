@@ -65,5 +65,39 @@ research_agent = Agent(
 
 
 async def run_research() -> List[HotTopic]:
-    result = await research_agent.run("Fetch all data and identify viral topics.")
+    from ..di import container
+
+    # Get fetchers from DI
+    hn_fetcher = container.hn_fetcher()
+    twitter_fetcher = container.twitter_fetcher()
+    rss_fetcher = container.rss_fetcher()
+
+    hn_data = await hn_fetcher.fetch()
+    twitter_data = await twitter_fetcher.fetch()
+    rss_data = await rss_fetcher.fetch()
+
+    # Save to DB
+    db_session = container.db_session()
+    async with db_session() as session:  # Assuming AsyncSessionLocal is callable
+        for item in hn_data:
+            db_item = HNItem.from_pydantic(item)
+            session.add(db_item)
+        for item in twitter_data:
+            db_item = Trend.from_pydantic(item)
+            session.add(db_item)
+        for item in rss_data:
+            db_item = RSSItem.from_pydantic(item)
+            session.add(db_item)
+        await session.commit()
+
+    # Prepare data for agent
+    data_summary = (
+        f"HN: {', '.join([f'{item.title} ({item.points} points)' for item in hn_data])}\n"
+    )
+    data_summary += f"Trends: {', '.join([f'{item.name} ({item.tweet_volume or 0})' for item in twitter_data])}\n"
+    data_summary += f"RSS: {', '.join([item.title for item in rss_data])}"
+
+    result = await research_agent.run(
+        f"Analyze this data and identify viral topics:\n{data_summary}"
+    )
     return result.data
