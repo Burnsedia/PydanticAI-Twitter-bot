@@ -1,13 +1,36 @@
 [project]
 name = "pydanticai-twitter-bot"
 version = "0.1.0"
-description = "Add your description here"
+description = "PydanticAI Twitter bot that researches HN and Twitter trends to generate viral tweets"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
-    "fastapi>=0.128.0",
-    "fastmcp>=2.14.2",
     "pydantic>=2.12.5",
     "pydantic-ai>=1.40.0",
+    "pydantic-settings>=2.0.0",
     "tweepy>=4.16.0",
+    "sqlalchemy>=2.0.0",
+    "alembic>=1.12.0",
+    "dependency-injector>=4.40.0",
+    "feedparser>=6.0.0",
+    "beautifulsoup4>=4.12.0",
+    "requests>=2.31.0",
+    "schedule>=1.2.0",
+]
+
+[tool.setuptools]
+packages = ["src"]
+
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.ruff]
+line-length = 100
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-asyncio>=0.21.0",
+    "responses>=0.24.0",
 ]
