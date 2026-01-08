@@ -77,7 +77,6 @@ async def post_reply_tweet(text: str, reply_to_id: str) -> str:
 posting_agent = Agent(
     "openai:gpt-4o-mini",
     system_prompt="You are a Twitter posting agent. Use tools to post tweet threads. Start with initial tweet, then reply tweets. Handle errors gracefully. Return list of posted tweet IDs.",
-    result_type=List[str],
     tools=[post_initial_tweet, post_reply_tweet],
 )
 
